@@ -8,7 +8,7 @@
   const stage = document.getElementById("top");
   const demo = document.getElementById("demo");
 
-  const FRAME_COUNT = 8;
+  const FRAME_COUNT = 16;
   const sources = Array.from(
     { length: FRAME_COUNT },
     (_, i) => `frames/frame-${String(i).padStart(2, "0")}.webp`
