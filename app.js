@@ -12,7 +12,7 @@
   const FRAME_COUNT = 16;
   const sources = Array.from(
     { length: FRAME_COUNT },
-    (_, i) => `frames/frame-${String(i).padStart(2, "0")}.webp`
+    (_, i) => `frames/frame-${String(i).padStart(2, "0")}.webp?v=2`
   );
 
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
