@@ -61,7 +61,7 @@ ul, ol, dl { margin: 0; padding: 0; }
 .head-btn:hover { background: var(--accent); }
 
 /* ---------- Перший екран ---------- */
-.stage { height: 160vh; }
+.stage { height: 220vh; }
 .stage-inner {
   position: sticky; top: 0;
   display: grid;
