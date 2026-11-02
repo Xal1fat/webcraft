@@ -107,7 +107,11 @@ h1 {
 .browser {
   background: #fff;
   border: 1px solid var(--line); border-radius: 4px; overflow: hidden;
+  transform: scale(1);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
 }
+.browser-link:hover .browser { transform: scale(1.02); }
 .chrome {
   display: flex; align-items: center; gap: 6px;
   padding: 10px 12px; background: #f6f6f2; border-bottom: 1px solid var(--line);
@@ -143,7 +147,11 @@ h2 {
 .grid img {
   width: 100%; aspect-ratio: 16 / 10; object-fit: cover;
   border: 1px solid var(--line); border-radius: 3px;
+  transform: scale(1);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
 }
+.grid a:hover img { transform: scale(1.045); }
 .grid-title { display: block; margin-top: 10px; font-size: 0.95rem; }
 .grid-meta { display: block; color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
 
@@ -216,4 +224,6 @@ h2 {
   .stage { height: auto; }
   .stage-inner { position: static; min-height: 0; }
   .btn, .head-btn, .hint { transition: none; }
+  .grid img, .browser { transition: none; }
+  .grid a:hover img, .browser-link:hover .browser { transform: none; }
 }

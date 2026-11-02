@@ -44,77 +44,44 @@
     return;
   }
 
-  let scrubRaf = 0;
-  let autoplayTimer = 0;
-  let observer = null;
-  let played = false;
+  let raf = 0;
+  let eased = 0;
 
-  function startScrub() {
-    let eased = 0;
+  // Единый скраб: target = progress * (FRAME_COUNT - 1), сглаживание lerp 0.18.
+  function run(getProgress) {
     const step = () => {
-      const rect = stage.getBoundingClientRect();
-      const total = stage.offsetHeight - window.innerHeight;
-      const p = total <= 0 ? 0 : Math.min(1, Math.max(0, -rect.top / total));
+      const p = Math.min(1, Math.max(0, getProgress()));
       const target = p * (FRAME_COUNT - 1);
       eased += (target - eased) * 0.18;
       if (Math.abs(target - eased) < 0.01) eased = target;
       draw(Math.round(eased));
       if (bar) bar.style.width = `${(eased / (FRAME_COUNT - 1)) * 100}%`;
       if (eased > 0.5) hideHint();
-      scrubRaf = requestAnimationFrame(step);
+      raf = requestAnimationFrame(step);
     };
-    scrubRaf = requestAnimationFrame(step);
+    raf = requestAnimationFrame(step);
   }
 
-  function playOnce() {
-    if (played) return;
-    played = true;
-    const DURATION = 2400;
-    const start = performance.now();
-    const step = (now) => {
-      const t = Math.min(1, (now - start) / DURATION);
-      const idx = Math.min(FRAME_COUNT - 1, Math.floor(t * FRAME_COUNT));
-      draw(idx);
-      if (bar) bar.style.width = `${(idx / (FRAME_COUNT - 1)) * 100}%`;
-      if (idx > 0) hideHint();
-      if (t < 1) {
-        autoplayTimer = requestAnimationFrame(step);
-      } else {
-        draw(FRAME_COUNT - 1);
-        if (bar) bar.style.width = "100%";
-      }
-    };
-    autoplayTimer = requestAnimationFrame(step);
+  // Десктоп: липкая сцена 220vh — прогресс от скролла сцены.
+  function desktopProgress() {
+    const rect = stage.getBoundingClientRect();
+    const total = stage.offsetHeight - window.innerHeight;
+    return total <= 0 ? 0 : -rect.top / total;
   }
 
-  function resetAutoplay() {
-    played = false;
-    if (autoplayTimer) cancelAnimationFrame(autoplayTimer);
-    autoplayTimer = 0;
-    draw(0);
-    if (bar) bar.style.width = "0%";
+  // Мобильный: без липкой сцены — прогресс от положения карточки во вьюпорте.
+  // Низ экрана → кадр 0, центр → середина, уход за верхний край → последний кадр.
+  function mobileProgress() {
+    const r = demo.getBoundingClientRect();
+    const vh = window.innerHeight;
+    const total = r.height + vh;
+    return total <= 0 ? 0 : (vh - r.top) / total;
   }
 
   function setupMode() {
     if (reduced) return;
-    if (scrubRaf) { cancelAnimationFrame(scrubRaf); scrubRaf = 0; }
-    if (observer) { observer.disconnect(); observer = null; }
-    resetAutoplay();
-
-    if (desktopMq.matches) {
-      startScrub();
-    } else {
-      observer = new IntersectionObserver((entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-            playOnce();
-          } else if (!entry.isIntersecting) {
-            resetAutoplay();
-          }
-        }
-      }, { threshold: [0, 0.5] });
-      observer.observe(demo);
-    }
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    run(desktopMq.matches ? desktopProgress : mobileProgress);
   }
 
   setupMode();
