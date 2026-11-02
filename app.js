@@ -7,6 +7,7 @@
   const hint = document.getElementById("hint");
   const stage = document.getElementById("top");
   const demo = document.getElementById("demo");
+  const browserLink = document.querySelector(".browser-link");
 
   const FRAME_COUNT = 16;
   const sources = Array.from(
@@ -18,14 +19,32 @@
   const desktopMq = window.matchMedia("(min-width: 981px)");
 
   const images = new Array(FRAME_COUNT);
-  let drawn = -1;
 
+  // Рисуем один кадр непрозрачно (постер/статичный кадр 0).
   function draw(i) {
-    if (i === drawn) return;
     const img = images[i];
     if (!img || !img.complete || !img.naturalWidth) return;
+    ctx.globalAlpha = 1;
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    drawn = i;
+  }
+
+  // Кросс-фейд между соседними кадрами: скролл выглядит непрерывным,
+  // а не «прыжками» по кадрам.
+  function drawBlend(eased) {
+    const i = Math.max(0, Math.min(FRAME_COUNT - 1, Math.floor(eased)));
+    const frac = Math.max(0, Math.min(1, eased - i));
+    const a = images[i];
+    if (!a || !a.complete || !a.naturalWidth) return;
+    ctx.globalAlpha = 1;
+    ctx.drawImage(a, 0, 0, canvas.width, canvas.height);
+    if (frac > 0.002 && i + 1 < FRAME_COUNT) {
+      const b = images[i + 1];
+      if (b && b.complete && b.naturalWidth) {
+        ctx.globalAlpha = frac;
+        ctx.drawImage(b, 0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 1;
+      }
+    }
   }
 
   sources.forEach((src, i) => {
@@ -44,6 +63,22 @@
     return;
   }
 
+  // Лёгкий 3D-наклон окна за курсором (только десктоп / мышь).
+  const canTilt = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  if (canTilt && browserLink) {
+    demo.addEventListener("pointermove", (e) => {
+      const r = demo.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      browserLink.style.setProperty("--ry", `${(x * 5).toFixed(2)}deg`);
+      browserLink.style.setProperty("--rx", `${(-y * 4).toFixed(2)}deg`);
+    });
+    demo.addEventListener("pointerleave", () => {
+      browserLink.style.setProperty("--ry", "0deg");
+      browserLink.style.setProperty("--rx", "0deg");
+    });
+  }
+
   let raf = 0;
   let eased = 0;
 
@@ -54,7 +89,7 @@
       const target = p * (FRAME_COUNT - 1);
       eased += (target - eased) * 0.18;
       if (Math.abs(target - eased) < 0.01) eased = target;
-      draw(Math.round(eased));
+      drawBlend(eased);
       if (bar) bar.style.width = `${(eased / (FRAME_COUNT - 1)) * 100}%`;
       if (eased > 0.5) hideHint();
       raf = requestAnimationFrame(step);
@@ -69,8 +104,7 @@
     return total <= 0 ? 0 : -rect.top / total;
   }
 
-  // Мобильный: без липкой сцены — прогресс от положения карточки во вьюпорте.
-  // Низ экрана → кадр 0, центр → середина, уход за верхний край → последний кадр.
+  // Мобильный: прогресс от положения карточки во вьюпорте.
   function mobileProgress() {
     const r = demo.getBoundingClientRect();
     const vh = window.innerHeight;

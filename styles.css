@@ -102,16 +102,22 @@ h1 {
 .facts dd { margin: 4px 0 0; color: var(--muted); font-size: 0.8rem; line-height: 1.45; }
 
 /* ---------- Демо ---------- */
-.demo { margin: 0; }
-.browser-link { display: block; }
+.demo { margin: 0; perspective: 1200px; }
+.browser-link {
+  display: block;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.2s ease-out;
+  will-change: transform;
+}
 .browser {
   background: #fff;
   border: 1px solid var(--line); border-radius: 4px; overflow: hidden;
-  transform: scale(1);
-  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: scale(var(--zoom, 1));
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
+  box-shadow: 0 24px 60px -32px rgba(18, 19, 17, 0.4);
 }
-.browser-link:hover .browser { transform: scale(1.02); }
+.browser-link:hover .browser { --zoom: 1.02; }
 .chrome {
   display: flex; align-items: center; gap: 6px;
   padding: 10px 12px; background: #f6f6f2; border-bottom: 1px solid var(--line);
@@ -224,6 +230,7 @@ h2 {
   .stage { height: auto; }
   .stage-inner { position: static; min-height: 0; }
   .btn, .head-btn, .hint { transition: none; }
-  .grid img, .browser { transition: none; }
-  .grid a:hover img, .browser-link:hover .browser { transform: none; }
+  .grid img, .browser, .browser-link { transition: none; }
+  .grid a:hover img { transform: none; }
+  .browser-link:hover .browser { --zoom: 1; }
 }
